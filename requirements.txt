@@ -6,3 +6,4 @@ joblib
 plotly
 shap
 matplotlib
+scipy
