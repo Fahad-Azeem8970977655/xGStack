@@ -241,7 +241,7 @@ if page == "🏠 Home":
                     top5.style.format({"roc_auc": "{:.3f}", "brier": "{:.3f}"}).background_gradient(
                         subset=["roc_auc"], cmap="Greens"
                     ),
-                    use_container_width=True, hide_index=True,
+                    width='stretch', hide_index=True,
                 )
 
         st.divider()
@@ -369,7 +369,7 @@ elif page == "🗒️ Auto Insights":
     if preds_df is not None:
         pred_cols = [c for c in preds_df.columns if c.startswith("pred_")]
         if len(pred_cols) >= 2:
-            corr = preds_df[pred_cols].corr()
+            corr = preds_df[pred_cols].corr().copy()
             np.fill_diagonal(corr.values, np.nan)
             most_similar = corr.stack().idxmax()
             insights.append(
@@ -414,7 +414,7 @@ elif page == "📊 Model Leaderboard":
                         .style.format({"roc_auc": "{:.3f}", "brier": "{:.3f}", "log_loss": "{:.3f}"})
                         .background_gradient(subset=["roc_auc"], cmap="Greens")
                         .background_gradient(subset=["brier", "log_loss"], cmap="Reds_r"),
-                        use_container_width=True, hide_index=True, height=420,
+                        width='stretch', hide_index=True, height=420,
                     )
                 with right:
                     metric_choice = st.radio(
@@ -433,7 +433,7 @@ elif page == "📊 Model Leaderboard":
                     )
                     fig.update_layout(yaxis={"categoryorder": "total ascending" if not ascending else "total descending"},
                                        showlegend=False)
-                    st.plotly_chart(style_fig(fig, 440), use_container_width=True)
+                    st.plotly_chart(style_fig(fig, 440), width='stretch')
 
         with tab_objs[-1]:
             if len(tasks) > 1:
@@ -441,7 +441,7 @@ elif page == "📊 Model Leaderboard":
                     results_df, x="roc_auc", y="model", color="task", orientation="h",
                     barmode="group", title="ROC AUC — xG vs PSxG models side by side",
                 )
-                st.plotly_chart(style_fig(fig, 500), use_container_width=True)
+                st.plotly_chart(style_fig(fig, 500), width='stretch')
             else:
                 st.info("Only one task (xG) is present in this results file — nothing to compare yet. "
                         "Re-run the notebook with placement features to also get PSxG results.")
@@ -474,7 +474,7 @@ elif page == "🔬 Model Deep-Dive":
                 score = auc(fpr, tpr)
                 fig.add_trace(go.Scatter(x=fpr, y=tpr, mode="lines", name=f"{name} (AUC={score:.3f})"))
             fig.update_layout(title="ROC Curves", xaxis_title="False Positive Rate", yaxis_title="True Positive Rate")
-            st.plotly_chart(style_fig(fig, 520), use_container_width=True)
+            st.plotly_chart(style_fig(fig, 520), width='stretch')
 
         with tab_calib:
             selected_c = st.multiselect("Models to plot", model_names, default=model_names[:5], key="calib_models")
@@ -486,7 +486,7 @@ elif page == "🔬 Model Deep-Dive":
                 fig.add_trace(go.Scatter(x=mean_pred, y=frac_pos, mode="lines+markers", name=name))
             fig.update_layout(title="Calibration curves (perfectly calibrated = diagonal)",
                                xaxis_title="Mean predicted probability", yaxis_title="Fraction of actual goals")
-            st.plotly_chart(style_fig(fig, 520), use_container_width=True)
+            st.plotly_chart(style_fig(fig, 520), width='stretch')
             st.caption("A model above the diagonal under-predicts risk in that bucket; below it over-predicts.")
 
         with tab_cm:
@@ -517,7 +517,7 @@ elif page == "🔬 Model Deep-Dive":
                 color_continuous_scale="Blues",
                 title=f"Confusion matrix — {model_for_cm} @ threshold {threshold:.2f}",
             )
-            st.plotly_chart(style_fig(fig), use_container_width=True)
+            st.plotly_chart(style_fig(fig), width='stretch')
 
             tn, fp, fn, tp = cm.ravel()
             precision = tp / (tp + fp) if (tp + fp) else 0
@@ -537,7 +537,7 @@ elif page == "🔬 Model Deep-Dive":
                 precision, recall, _ = precision_recall_curve(y_true, proba)
                 fig.add_trace(go.Scatter(x=recall, y=precision, mode="lines", name=name))
             fig.update_layout(title="Precision–Recall curves", xaxis_title="Recall", yaxis_title="Precision")
-            st.plotly_chart(style_fig(fig, 520), use_container_width=True)
+            st.plotly_chart(style_fig(fig, 520), width='stretch')
 
         with tab_boot:
             st.caption("Bootstrap resampling of the test set to see how stable ROC AUC really is (not just a single number).")
@@ -567,7 +567,7 @@ elif page == "🔬 Model Deep-Dive":
                 fig.add_vline(x=lo, line_dash="dash", line_color="red")
                 fig.add_vline(x=hi, line_dash="dash", line_color="red")
                 fig.update_layout(xaxis_title="ROC AUC", showlegend=False)
-                st.plotly_chart(style_fig(fig, 420), use_container_width=True)
+                st.plotly_chart(style_fig(fig, 420), width='stretch')
 
 # ===========================================================================
 # PAGE: MODEL BATTLE
@@ -616,7 +616,7 @@ elif page == "🥊 Model Battle":
                 opacity=0.6,
             )
             fig.add_shape(type="line", x0=0, y0=0, x1=1, y1=1, line=dict(dash="dash", color="grey"))
-            st.plotly_chart(style_fig(fig, 480), use_container_width=True)
+            st.plotly_chart(style_fig(fig, 480), width='stretch')
 
         with right:
             st.subheader("🔥 Biggest disagreements")
@@ -631,7 +631,7 @@ elif page == "🥊 Model Battle":
                     "distance": "{:.1f}", "angle_deg": "{:.1f}",
                     f"pred_{model_a}": "{:.3f}", f"pred_{model_b}": "{:.3f}", "gap": "{:.3f}",
                 }),
-                use_container_width=True, hide_index=True,
+                width='stretch', hide_index=True,
             )
 
 # ===========================================================================
@@ -696,7 +696,7 @@ elif page == "🧬 Ensemble Builder":
                                           line=dict(color="crimson", width=4)))
                 fig.update_layout(title="Blend vs its ingredients", xaxis_title="False Positive Rate",
                                    yaxis_title="True Positive Rate")
-                st.plotly_chart(style_fig(fig, 500), use_container_width=True)
+                st.plotly_chart(style_fig(fig, 500), width='stretch')
 
                 with st.expander("⬇️ Export blended predictions"):
                     export_df = preds_df.copy()
@@ -750,8 +750,8 @@ elif page == "🧠 Explainability":
                     marker_color="teal",
                 ))
                 fig.update_layout(title="Permutation importance (ROC AUC drop)", xaxis_title="Mean importance")
-                st.plotly_chart(style_fig(fig, 420), use_container_width=True)
-                st.dataframe(imp_df.sort_values("importance_mean", ascending=False), use_container_width=True, hide_index=True)
+                st.plotly_chart(style_fig(fig, 420), width='stretch')
+                st.dataframe(imp_df.sort_values("importance_mean", ascending=False), width='stretch', hide_index=True)
 
         with tab_pdp:
             st.caption(f"Holding every other feature at its median, how does **{model_label}**'s "
@@ -768,7 +768,7 @@ elif page == "🧠 Explainability":
 
             fig = px.line(x=grid, y=pdp_proba, labels={"x": pdp_feature, "y": "Predicted P(goal)"},
                            title=f"Partial dependence — {pdp_feature}")
-            st.plotly_chart(style_fig(fig, 420), use_container_width=True)
+            st.plotly_chart(style_fig(fig, 420), width='stretch')
 
         with tab_shap:
             try:
@@ -803,7 +803,7 @@ elif page == "🧠 Explainability":
 
                     fig = px.bar(mean_abs, x="mean_abs_shap", y="feature", orientation="h",
                                  title="Mean |SHAP value| — average impact on predicted probability")
-                    st.plotly_chart(style_fig(fig, 420), use_container_width=True)
+                    st.plotly_chart(style_fig(fig, 420), width='stretch')
 
                     st.subheader("🔎 One shot, explained")
                     row_idx = st.slider("Which sampled shot to break down", 0, sample_size - 1, 0)
@@ -825,7 +825,7 @@ elif page == "🧠 Explainability":
                     ))
                     predicted = model.predict_proba(X_sample.iloc[[row_idx]])[0, 1]
                     fig2.update_layout(title=f"How this shot's {predicted:.1%} prediction was built")
-                    st.plotly_chart(style_fig(fig2, 420), use_container_width=True)
+                    st.plotly_chart(style_fig(fig2, 420), width='stretch')
 
 # ===========================================================================
 # PAGE: AUTOML LAB
@@ -966,20 +966,20 @@ elif page == "🛠️ AutoML Lab":
                                               line=dict(color="crimson", width=3)))
                     fig.update_layout(title="ROC Curve — freshly trained model",
                                        xaxis_title="False Positive Rate", yaxis_title="True Positive Rate")
-                    st.plotly_chart(style_fig(fig, 460), use_container_width=True)
+                    st.plotly_chart(style_fig(fig, 460), width='stretch')
                 with tab_imp:
                     raw_model = trained_model.named_steps["clf"] if hasattr(trained_model, "named_steps") else trained_model
                     if hasattr(raw_model, "feature_importances_"):
                         imp = pd.DataFrame({"feature": feature_cols, "importance": raw_model.feature_importances_}) \
                             .sort_values("importance")
                         fig = px.bar(imp, x="importance", y="feature", orientation="h", title="Feature importance")
-                        st.plotly_chart(style_fig(fig, 420), use_container_width=True)
+                        st.plotly_chart(style_fig(fig, 420), width='stretch')
                     elif hasattr(raw_model, "coef_"):
                         imp = pd.DataFrame({"feature": feature_cols, "coefficient": raw_model.coef_[0]}) \
                             .sort_values("coefficient")
                         fig = px.bar(imp, x="coefficient", y="feature", orientation="h",
                                      title="Logistic regression coefficients")
-                        st.plotly_chart(style_fig(fig, 420), use_container_width=True)
+                        st.plotly_chart(style_fig(fig, 420), width='stretch')
                     else:
                         st.info(f"{algo_name} doesn't expose a simple feature-importance view.")
 
@@ -1056,11 +1056,11 @@ elif page == "📥 Batch Predictor":
                 c3.metric("Avg. predicted xG", f"{batch_df['predicted_xg'].mean():.3f}")
 
                 fig = px.histogram(batch_df, x="predicted_xg", nbins=30, title="Distribution of predicted xG")
-                st.plotly_chart(style_fig(fig, 380), use_container_width=True)
+                st.plotly_chart(style_fig(fig, 380), width='stretch')
 
                 st.dataframe(
                     batch_df.sort_values("predicted_xg", ascending=False).style.format({"predicted_xg": "{:.3f}"}),
-                    use_container_width=True, height=420,
+                    width='stretch', height=420,
                 )
                 st.download_button(
                     "⬇️ Download scored shots", batch_df.to_csv(index=False).encode("utf-8"),
@@ -1137,7 +1137,7 @@ elif page == "🗺️ Shot Explorer":
                         xaxis=dict(visible=False, range=[58, 122]),
                         yaxis=dict(visible=False, range=[-2, 82]),
                     )
-                    st.plotly_chart(style_fig(fig, 560), use_container_width=True)
+                    st.plotly_chart(style_fig(fig, 560), width='stretch')
                 else:
                     st.info("No x/y location columns available to draw a shot map.")
 
@@ -1155,7 +1155,7 @@ elif page == "🗺️ Shot Explorer":
                         fig.add_trace(tr)
                     fig.update_layout(xaxis=dict(visible=False, range=[58, 122]),
                                        yaxis=dict(visible=False, range=[-2, 82]))
-                    st.plotly_chart(style_fig(fig, 560), use_container_width=True)
+                    st.plotly_chart(style_fig(fig, 560), width='stretch')
                     st.caption("Each cell shows the average goal outcome (0–1) for shots taken from that zone — "
                                "not shot volume. A bright cell with very few shots can be noisy; cross-check "
                                "against the Shot Map tab.")
@@ -1193,11 +1193,11 @@ elif page == "🗺️ Shot Explorer":
                         title="Goals vs xG — top 20 players by goals",
                     )
                     fig.update_layout(xaxis_tickangle=-45)
-                    st.plotly_chart(style_fig(fig, 480), use_container_width=True)
+                    st.plotly_chart(style_fig(fig, 480), width='stretch')
                     st.dataframe(
                         top20.style.format({"xg": "{:.2f}", "xg_diff": "{:+.2f}"})
                         .background_gradient(subset=["xg_diff"], cmap="RdYlGn"),
-                        use_container_width=True,
+                        width='stretch',
                     )
                 else:
                     st.info("Need `player` and an xG column to build this view.")
@@ -1250,10 +1250,10 @@ elif page == "🗺️ Shot Explorer":
                                                        fill="toself", name=player_b))
                         fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
                                            title=f"{player_a} vs {player_b}")
-                        st.plotly_chart(style_fig(fig, 480), use_container_width=True)
+                        st.plotly_chart(style_fig(fig, 480), width='stretch')
 
                         compare_table = pd.DataFrame({player_a: stats_a, player_b: stats_b})
-                        st.dataframe(compare_table.style.format("{:.2f}"), use_container_width=True)
+                        st.dataframe(compare_table.style.format("{:.2f}"), width='stretch')
                 else:
                     st.info("Need a `player` column to build this view.")
 
@@ -1263,12 +1263,12 @@ elif page == "🗺️ Shot Explorer":
                     if "distance" in f.columns:
                         fig = px.histogram(f, x="distance", color="goal" if "goal" in f.columns else None,
                                             nbins=30, barmode="overlay", title="Shot distance distribution")
-                        st.plotly_chart(style_fig(fig), use_container_width=True)
+                        st.plotly_chart(style_fig(fig), width='stretch')
                 with d2:
                     if "angle_deg" in f.columns:
                         fig = px.histogram(f, x="angle_deg", color="goal" if "goal" in f.columns else None,
                                             nbins=30, barmode="overlay", title="Shot angle distribution")
-                        st.plotly_chart(style_fig(fig), use_container_width=True)
+                        st.plotly_chart(style_fig(fig), width='stretch')
 
 # ===========================================================================
 # PAGE: MATCH CENTER
@@ -1330,14 +1330,14 @@ elif page == "🏟️ Match Center":
                 title=f"Cumulative {xg_col} race — {chosen_label}",
                 xaxis_title="Minute", yaxis_title=f"Cumulative {xg_col}",
             )
-            st.plotly_chart(style_fig(fig, 520), use_container_width=True)
+            st.plotly_chart(style_fig(fig, 520), width='stretch')
 
             st.subheader("📋 Shot log")
             log_cols = [c for c in ["minute", "player", "team", "shot_body_part", "shot_type", xg_col, "goal"]
                         if c in match_shots.columns]
             st.dataframe(
                 match_shots[log_cols].style.format({xg_col: "{:.3f}"}),
-                use_container_width=True, hide_index=True, height=350,
+                width='stretch', hide_index=True, height=350,
             )
 
             st.divider()
@@ -1389,7 +1389,7 @@ elif page == "🏟️ Match Center":
                         x=actual_goals_b, y=actual_goals_a, text="⭐ actual", showarrow=True,
                         arrowhead=2, font=dict(color="white", size=13),
                     )
-                    st.plotly_chart(style_fig(fig, 480), use_container_width=True)
+                    st.plotly_chart(style_fig(fig, 480), width='stretch')
 
                     most_likely_idx = np.unravel_index(scoreline_counts.argmax(), scoreline_counts.shape)
                     st.caption(
@@ -1472,8 +1472,8 @@ elif page == "🔮 Live Predictor":
                 st.caption(f"📏 Distance: **{distance:.1f}**  •  📐 Angle: **{angle_deg:.1f}°**")
                 xg_value = float(model.predict_proba(features)[0, 1])
             with right:
-                st.plotly_chart(gauge(xg_value, "Probability this shot is a goal"), use_container_width=True)
-                st.plotly_chart(mini_pitch(x, y), use_container_width=True)
+                st.plotly_chart(gauge(xg_value, "Probability this shot is a goal"), width='stretch')
+                st.plotly_chart(mini_pitch(x, y), width='stretch')
                 if xg_value >= 0.4:
                     st.info("🔥 High-quality chance.")
                 elif xg_value >= 0.15:
@@ -1487,13 +1487,13 @@ elif page == "🔮 Live Predictor":
                 xa, ya, bpa, sta, upa = shot_inputs("a", 108.0, 34.0)
                 feat_a, dist_a, ang_a = compute_features(xa, ya, bpa, sta, upa)
                 xg_a = float(model.predict_proba(feat_a)[0, 1])
-                st.plotly_chart(gauge(xg_a, "Shot A xG"), use_container_width=True)
+                st.plotly_chart(gauge(xg_a, "Shot A xG"), width='stretch')
             with col_y:
                 st.subheader("🔴 Shot B")
                 xb, yb, bpb, stb, upb = shot_inputs("b", 108.0, 46.0)
                 feat_b, dist_b, ang_b = compute_features(xb, yb, bpb, stb, upb)
                 xg_b = float(model.predict_proba(feat_b)[0, 1])
-                st.plotly_chart(gauge(xg_b, "Shot B xG"), use_container_width=True)
+                st.plotly_chart(gauge(xg_b, "Shot B xG"), width='stretch')
 
             diff = xg_a - xg_b
             if abs(diff) < 0.01:
@@ -1512,7 +1512,7 @@ elif page == "🔮 Live Predictor":
                                       marker=dict(size=20, color="#d62728", line=dict(width=2, color="black")), showlegend=False))
             fig.update_layout(xaxis=dict(visible=False, range=[58, 122]), yaxis=dict(visible=False, range=[-2, 82]),
                                title="Both shot locations")
-            st.plotly_chart(style_fig(fig, 320), use_container_width=True)
+            st.plotly_chart(style_fig(fig, 320), width='stretch')
 
 # ===========================================================================
 # PAGE: CHART GALLERY
@@ -1535,7 +1535,7 @@ elif page == "🖼️ Chart Gallery":
             for i, img_path in enumerate(filtered_images):
                 label = os.path.basename(img_path).replace(".png", "").replace("_", " ").title()
                 with cols[i % 2]:
-                    st.image(img_path, caption=f"📌 {label}", use_container_width=True)
+                    st.image(img_path, caption=f"📌 {label}", width='stretch')
 
 # ===========================================================================
 # PAGE: RAW DATA
@@ -1564,7 +1564,7 @@ elif page == "📁 Raw Data":
                     mask = data.astype(str).apply(lambda col: col.str.contains(search, case=False, na=False)).any(axis=1)
                     view = data[mask]
                 st.caption(f"{len(view):,} of {len(data):,} rows shown")
-                st.dataframe(view, use_container_width=True, height=500)
+                st.dataframe(view, width='stretch', height=500)
                 st.download_button(
                     f"⬇️ Download {name.split(' ', 1)[1]} as CSV",
                     view.to_csv(index=False).encode("utf-8"),
