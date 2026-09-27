@@ -39,6 +39,7 @@ from sklearn.metrics import (
 )
 from sklearn.calibration import calibration_curve
 from sklearn.inspection import permutation_importance
+from scipy.optimize import minimize
 
 # ---------------------------------------------------------------------------
 # Page config — must be first Streamlit call
@@ -179,6 +180,45 @@ st.sidebar.write(f"{'✅' if results_df is not None else '⚠️'} Model results
 st.sidebar.write(f"{'✅' if preds_df is not None else '⚠️'} Test predictions")
 st.sidebar.write(f"{'✅' if shots_df is not None else '⚠️'} Shots dataset")
 st.sidebar.write(f"{'✅' if best_xg_model_path else '⚠️'} Trained model file")
+
+def optimize_blend_weights(preds_df, y_true, chosen, n_random=3000, seed=42):
+    """Find blend weights (summing to 1, each >= 0) that maximize ROC AUC.
+
+    AUC as a function of the weights is flat/non-smooth, so a gradient-based
+    optimizer alone can get stuck. We first scan many random weight
+    combinations (Dirichlet samples, which sum to 1 by construction), keep the
+    best one, then polish it with a local optimizer (SLSQP) started from
+    there.
+    """
+    pred_matrix = np.column_stack([preds_df[f"pred_{name}"].values for name in chosen])
+    n = len(chosen)
+
+    def neg_auc(w):
+        w = np.clip(w, 0, None)
+        total = w.sum()
+        if total == 0:
+            return 0.0
+        blend = pred_matrix @ w / total
+        fpr, tpr, _ = roc_curve(y_true, blend)
+        return -auc(fpr, tpr)
+
+    rng = np.random.default_rng(seed)
+    best_w, best_score = np.ones(n) / n, neg_auc(np.ones(n) / n)
+    for w in rng.dirichlet(np.ones(n), size=n_random):
+        score = neg_auc(w)
+        if score < best_score:
+            best_score, best_w = score, w
+
+    bounds = [(0.0, 1.0)] * n
+    constraints = ({"type": "eq", "fun": lambda w: np.sum(w) - 1},)
+    result = minimize(neg_auc, best_w, method="SLSQP", bounds=bounds,
+                       constraints=constraints, options={"maxiter": 200, "ftol": 1e-6})
+
+    final_w = result.x if result.success and result.fun <= best_score else best_w
+    final_w = np.clip(final_w, 0, None)
+    final_w = final_w / final_w.sum()
+    return dict(zip(chosen, final_w))
+
 
 # ===========================================================================
 # PAGE: HOME
@@ -657,6 +697,14 @@ elif page == "🧬 Ensemble Builder":
             st.info("Pick at least two models to build a blend.")
         else:
             st.subheader("⚖️ Weights")
+
+            if st.button("🔍 Auto-optimize weights (maximize AUC)"):
+                with st.spinner("Searching weight combinations..."):
+                    best_weights = optimize_blend_weights(preds_df, preds_df["actual_goal"], chosen)
+                for name, w in best_weights.items():
+                    st.session_state[f"w_{name}"] = round(float(w), 2)
+                st.rerun()
+
             weights = {}
             weight_cols = st.columns(len(chosen))
             for col, name in zip(weight_cols, chosen):
