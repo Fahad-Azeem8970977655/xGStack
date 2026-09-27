@@ -369,8 +369,10 @@ elif page == "🗒️ Auto Insights":
     if preds_df is not None:
         pred_cols = [c for c in preds_df.columns if c.startswith("pred_")]
         if len(pred_cols) >= 2:
-            corr = preds_df[pred_cols].corr().copy()
-            np.fill_diagonal(corr.values, np.nan)
+            corr_raw = preds_df[pred_cols].corr()
+            corr_arr = corr_raw.to_numpy(copy=True)
+            np.fill_diagonal(corr_arr, np.nan)
+            corr = pd.DataFrame(corr_arr, index=corr_raw.index, columns=corr_raw.columns)
             most_similar = corr.stack().idxmax()
             insights.append(
                 f"🤝 **{most_similar[0].replace('pred_', '')}** and **{most_similar[1].replace('pred_', '')}** "
